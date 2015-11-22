@@ -1,0 +1,194 @@
+<html>
+    <head>
+        <title>RFID Weekend</title>
+    </head>
+
+    <body>
+        
+        Filament ID: <input id="filamentID" type="number" min="1" max="255"><br>
+
+        Color Name: <input id="colorName" type="text" maxlength="32"><br>
+
+        Material ID: <input id="materialID" type="text" type="number" min="1" max="255" ><br>
+        
+        Material Name: <input id="materialName" type="text" maxlength="16"><br>
+
+        Build/Support: <select id="supportOrBuild">
+                            <option value="1">Build</option>
+                            <option value="0">Support</option>
+                        </select><br>
+
+        Max Length: <input id="maxLength" type="number" min='1' max='2147483646'><br>
+
+        Now Length: <input id="nowLength" type="number" min='1' max='2147483646'><br>
+
+        Color Hex <br>
+        R:0x<input id="colorHex_r" type="text"><br>
+        G:0x<input id="colorHex_g" type="text"><br>
+        B:0x<input id="colorHex_b" type="text"><br>
+        A:0x<input id="colorHex_a" type="text"><br>
+        <br>
+        <button type="button" onclick="clear_rfid()">Clear RFID</button><br>
+
+        <button type="button" onclick="upload_data()">Upload</button><br>
+
+        <script>
+
+            function postData(data, url){
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', url);
+                xhr.onreadystatechange = function(){
+                    if (xhr.readyState == 4 && xhr.state == 200){
+                        console.log(xhr.responseText);
+                    }
+                }
+                xhr.send(data);
+            }
+            
+
+            function getRequest(url){
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url);
+                xhr.onreadystatechange = function(){
+                    if (xhr.readyState == 4 && xhr.state == 200){
+                        console.log(xhr.responseText);
+                    }
+                }
+                xhr.send();
+            }
+
+            function check_data(data){
+
+                function check_hex(hexString, limit){
+
+                    if (!hexString){
+                        return false;
+                    }
+                    
+                    if (parseInt(hexString, 16) <= limit || parseInt(hexString, 16) > 0 ){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                }
+
+                function check_number(num, lowerlimit, upperlimit){
+
+                    if (!num){
+                        return false;
+                    }
+                    
+                    num = parseInt(num);
+
+                    if (num > upperlimit || num < lowerlimit){
+                        return false
+                    }
+                    else{
+                        return true;
+                    }
+                }
+
+                function check_word_length(word, limit){
+                    
+                    if (!word){
+                        return false;
+                    }
+                    
+                    if (word.length > limit || word.length <1){
+                        return false;
+                    }
+                    else{
+                        return true;
+                    }
+                }
+
+                //check data
+                var warning_items = [];
+
+                if (!check_number(data['filamentID'], 1, 255)){
+                    warning_items.push("Filament ID, ")
+                }
+
+                if (!check_word_length(data['colorName'], 32)){
+                    warning_items.push("Color Name, ")
+                }
+
+                if (!check_number(data['materialID'], 1, 255)){
+                    warning_items.push("Material ID, ")
+                }
+
+                if (!check_word_length(data['materialName'], 16)){
+                    warning_items.push("Material Name, ")
+                }
+
+                if (!check_number(data['maxLength'], 1, 2147483646)){
+                    warning_items.push("Max Length, ")
+                }
+
+                if (!check_number(data['nowLength'], 1, 2147483646)){
+                    warning_items.push("Now Length, ")
+                }
+
+                if (!check_hex(data['colorHex_r'], 255)){
+                    warning_items.push("Color Hex R, ")
+                }
+
+                if (!check_hex(data['colorHex_g'], 255)){
+                    warning_items.push("Color Hex G, ")
+                }
+
+                if (!check_hex(data['colorHex_b'], 255)){
+                    warning_items.push("Color Hex B, ")
+                }
+
+                if (!check_hex(data['colorHex_a'], 255)){
+                    warning_items.push("Color Hex A, ")
+                }
+                
+                //check what to return
+                if (warning_items.length != 0){
+                    return "PLEASE CHECK INPUT: " + JSON.stringify(warning_items); 
+                }
+                else{
+                    return "ok";
+                }
+            }
+
+            function upload_data(){
+
+                var data = {
+                    "filamentID": document.getElementById("filamentID").value.trim(),
+                    "colorName": document.getElementById("colorName").value.trim(),
+                    "materialID": document.getElementById("materialID").value.trim(),
+                    "materialName": document.getElementById("materialName").value.trim(),
+                    "supportOrBuild": document.getElementById("supportOrBuild").value.trim(),
+                    "maxLength": document.getElementById("maxLength").value.trim(),
+                    "nowLength": document.getElementById("nowLength").value.trim(),
+                    "colorHex_r": document.getElementById("colorHex_r").value.trim(),
+                    "colorHex_g": document.getElementById("colorHex_g").value.trim(),
+                    "colorHex_b": document.getElementById("colorHex_b").value.trim(),
+                    "colorHex_a": document.getElementById("colorHex_a").value.trim()
+                }
+
+                var data_valid = check_data(data);
+
+                if (data_valid =="ok"){
+                    postData(JSON.stringify(data), 'http://localhost:5000/uploadData/');
+                    console.log(JSON.stringify(data));
+                }
+                else{
+                    alert(data_valid);
+                }
+            }
+
+            
+            function clear_rfid(){
+                getRequest('http://localhost:5000/clearRfid/');
+            }
+
+        </script> 
+
+    </body>
+
+</html> 
